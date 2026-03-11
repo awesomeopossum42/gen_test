@@ -425,7 +425,10 @@
     google.charts.setOnLoadCallback(init);
 
     // Cambia esta ruta si usarás otro nombre de archivo.
-    const CSV_URL = 'https://drive.google.com/uc?export=download&id=1spKhVKR-KwqySs0HLIb-4hCuaAeEsusG';
+    const CSV_FILES = [
+  './csv_col1.csv',
+  './csv_col2.csv'
+];
 
     // Config flexible para tolerar nombres de columna ligeramente distintos.
     const COLS = {
