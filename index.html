@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototipo Bienestar | Generalistas</title>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f5f7;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d9e2ec;
+      --brand: #20d1b2;
+      --brand-dark: #0fb39a;
+      --tec: #0b3b91;
+      --warning: #f59e0b;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fffd 100%);
+      border-radius: 24px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid #eef2f6;
+      margin-bottom: 20px;
+    }
+
+    .brand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .brand-tec {
+      color: var(--tec);
+      font-weight: 800;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .brand-raspberry {
+      color: #1f2937;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .brand-raspberry span {
+      color: var(--brand-dark);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      max-width: 920px;
+      font-size: 16px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr auto auto;
+      gap: 12px;
+      margin-top: 22px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    input, button, select {
+      height: 46px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      padding: 0 14px;
+      font-size: 15px;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(32, 209, 178, 0.22);
+      border-color: var(--brand);
+    }
+
+    button {
+      border: none;
+      background: linear-gradient(135deg, #70dfff 0%, #7ce5b5 100%);
+      color: white;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      padding: 0 18px;
+      box-shadow: var(--shadow);
+    }
+
+    button.secondary {
+      background: white;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      box-shadow: none;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid #eef2f6;
+    }
+
+    .kpi {
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .kpi .label {
+      color: #475569;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .kpi .value {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-top: 6px;
+    }
+
+    .kpi .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ecfeff;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .meta-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .meta-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfdff;
+    }
+
+    .meta-item .small {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .meta-item .big {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid #edf2f7;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .pill {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .warning {
+      background: #fff7ed;
+      color: #c2410c;
+      border-color: #fdba74;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      background: #fcfcfd;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+    }
+
+    @media (max-width: 720px) {
+      h1 { font-size: 30px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .meta-list { grid-template-columns: 1fr; }
+      .wrap { padding: 14px; }
+      .hero { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="brand-row">
+        <div class="brand-tec">Tecnológico<br>de Monterrey</div>
+        <div class="brand-raspberry"><span>✿</span> raspberry</div>
+      </div>
+      <h1>Impulsando el Bienestar con mis Seguros Voluntarios</h1>
+      <p class="sub">
+        Prototipo temporal en HTML + JS + Google Charts para validar la lógica antes de publicarlo en Looker Studio.
+        Ingresa la nómina del generalista para filtrar su universo y revisar penetración, impacto y distribución de seguros.
+      </p>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="nominaInput">Ingresa tu nómina</label>
+          <input id="nominaInput" type="text" placeholder="Ej. 3565508 o L00000055" />
+        </div>
+        <div class="field">
+          <label for="nameSearch">o busca por nombre del generalista</label>
+          <input id="nameSearch" type="text" placeholder="Ej. Mendoza Cabrera" />
+        </div>
+        <button id="applyBtn">CONSULTAR DETALLE</button>
+        <button id="clearBtn" class="secondary">LIMPIAR</button>
+      </div>
+      <div class="note">
+        Este prototipo asume un CSV exportado desde la hoja <strong>Colaboradores</strong> con columnas como: <strong>key_1</strong>, <strong>NOMINA</strong>, <strong># Gen</strong>, <strong>Nombre Generalista</strong>, <strong>Tipo Contrato Dashboard</strong>, <strong>Autos</strong>, <strong>Casa</strong>, <strong>Defunción</strong>, <strong>Dental</strong>, <strong>SGMM</strong>, <strong>SGMm</strong>, <strong>Vida</strong> y <strong>Total</strong>.
+      </div>
+    </section>
+
+    <div class="grid">
+      <div class="card kpi span-3">
+        <div class="label">Nómina consultada</div>
+        <div class="value" id="kpiNomina">-</div>
+        <div class="hint" id="kpiGenNameHint">Sin selección</div>
+      </div>
+      <div class="card kpi span-3">
+        <div class="label">Nombre generalista</div>
+        <div class="value" style="font-size: 26px; line-height: 1.1;" id="kpiGeneralista">-</div>
+        <div class="hint">Tomado del grupo filtrado</div>
+      </div>
+      <div class="card kpi span-3">
+        <div class="label">Clientes en SSFF</div>
+        <div class="value" id="kpiClientes">0</div>
+        <div class="hint">Distinct count de key_1</div>
+      </div>
+      <div class="card kpi span-3">
+        <div class="label">Impacto total</div>
+        <div class="value" id="kpiImpacto">0</div>
+        <div class="hint">Suma de Total del universo filtrado</div>
+      </div>
+
+      <div class="card span-5">
+        <div class="card-title">
+          <h3>Perfil del generalista</h3>
+          <span class="badge" id="badgeUniverse">0 personas</span>
+        </div>
+        <div class="meta-list" id="profileGrid"></div>
+      </div>
+
+      <div class="card span-7">
+        <div class="card-title">
+          <h3>Personas con al menos un seguro</h3>
+          <span class="badge" id="badgePenetracion">0%</span>
+        </div>
+        <div id="seguroChart" style="height: 320px;"></div>
+      </div>
+
+      <div class="card span-4">
+        <div class="card-title">
+          <h3>Impacto por tipo de contrato</h3>
+        </div>
+        <div id="contratoChart" style="height: 300px;"></div>
+      </div>
+
+      <div class="card span-4">
+        <div class="card-title">
+          <h3>Penetración por producto</h3>
+        </div>
+        <div id="penetracionChart" style="height: 300px;"></div>
+      </div>
+
+      <div class="card span-4">
+        <div class="card-title">
+          <h3>Mix de personas</h3>
+        </div>
+        <div id="personasChart" style="height: 300px;"></div>
+      </div>
+
+      <div class="card span-12">
+        <div class="card-title">
+          <h3>Detalle de personas atendidas</h3>
+          <span class="badge">Muestra filtrada</span>
+        </div>
+        <div id="tableContainer"></div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Prototipo de validación. Cuando confirmes la lógica, esto puede migrarse a Looker Studio o a un embed más formal sin tanta cinta adhesiva digital 🧩
+    </div>
+  </div>
+
+  <script>
+    google.charts.load('current', { packages: ['corechart', 'bar'] });
+    google.charts.setOnLoadCallback(init);
+
+    // Cambia esta ruta si usarás otro nombre de archivo.
+    const CSV_URL = 'https://drive.google.com/uc?export=download&id=1spKhVKR-KwqySs0HLIb-4hCuaAeEsusG';
+
+    // Config flexible para tolerar nombres de columna ligeramente distintos.
+    const COLS = {
+      key: ['key_1', 'key 1', 'key'],
+      nominaColaborador: ['NOMINA', 'Nomina', 'Nómina', 'nomina'],
+      nominaGeneralista: ['# Gen', 'Nomina Generalista', 'Nómina Generalista', 'nomina_generalista'],
+      generalista: ['Nombre Generalista', 'Generalista', 'Nombre del Generalista'],
+      persona: ['Personal', 'Personal (Nombre + Apellidos)', 'Número de personal', 'Persona'],
+      contrato: ['Tipo Contrato Dashboard', 'Tipo de Contrato Dashboard', 'Pool'],
+      autos: ['Autos'],
+      casa: ['Casa'],
+      defuncion: ['Defunción', 'Defuncion'],
+      dental: ['Dental'],
+      sgmm: ['SGMM'],
+      sgmm2: ['SGMm'],
+      vida: ['Vida'],
+      total: ['Total'],
+      estado: ['Estado', 'Estado.1'],
+      region: ['Región TEC', 'Region TEC'],
+      division: ['División de personal'],
+      publico: ['Público', 'Publico'],
+      email: ['Email institucional', 'Correo electrónico', 'Email']
+    };
+
+    let rawRows = [];
+    let activeRows = [];
+
+    function init() {
+      bindEvents();
+      loadCsv();
+    }
+
+    function bindEvents() {
+      document.getElementById('applyBtn').addEventListener('click', applyFilter);
+      document.getElementById('clearBtn').addEventListener('click', clearFilter);
+      document.getElementById('nominaInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') applyFilter();
+      });
+      document.getElementById('nameSearch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') applyFilter();
+      });
+      window.addEventListener('resize', () => {
+        if (activeRows.length) renderDashboard(activeRows);
+      });
+    }
+
+    function loadCsv() {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          rawRows = results.data.map(normalizeRow);
+          renderEmpty('Archivo cargado. Ingresa una nómina o nombre de generalista para consultar.');
+        },
+        error: () => {
+          renderEmpty('No se pudo cargar el CSV. Verifica la ruta en CSV_URL o exporta la hoja correcta.');
+        }
+      });
+    }
+
+    function normalizeRow(row) {
+      const out = { ...row };
+      Object.keys(out).forEach(k => {
+        if (typeof out[k] === 'string') out[k] = out[k].trim();
+      });
+      return out;
+    }
+
+    function getValue(row, aliases, fallback = '') {
+      for (const a of aliases) {
+        if (row[a] !== undefined && row[a] !== null && row[a] !== '') return row[a];
+      }
+      return fallback;
+    }
+
+    function asNumber(value) {
+      if (value === null || value === undefined || value === '') return 0;
+      if (typeof value === 'number') return isNaN(value) ? 0 : value;
+      const cleaned = String(value).replace(/,/g, '').replace(/\s+/g, '').replace(/[^0-9.-]/g, '');
+      const n = Number(cleaned);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function normalizeNomina(value) {
+      return String(value || '')
+        .toUpperCase()
+        .replace(/^L0+/, '')
+        .replace(/^L/, '')
+        .replace(/\D/g, '');
+    }
+
+    function applyFilter() {
+      if (!rawRows.length) {
+        renderEmpty('Aún no hay datos cargados.');
+        return;
+      }
+
+      const nominaInput = normalizeNomina(document.getElementById('nominaInput').value);
+      const nameInput = document.getElementById('nameSearch').value.trim().toLowerCase();
+
+      let filtered = rawRows.filter(r => {
+        const genNom = normalizeNomina(getValue(r, COLS.nominaGeneralista));
+        const genName = String(getValue(r, COLS.generalista)).toLowerCase();
+
+        const nominaMatch = nominaInput ? genNom === nominaInput : true;
+        const nameMatch = nameInput ? genName.includes(nameInput) : true;
+        return nominaMatch && nameMatch;
+      });
+
+      if (!filtered.length) {
+        renderEmpty('No encontré registros para ese filtro. Revisa la nómina o el nombre del generalista.');
+        return;
+      }
+
+      activeRows = filtered;
+      renderDashboard(filtered);
+    }
+
+    function clearFilter() {
+      document.getElementById('nominaInput').value = '';
+      document.getElementById('nameSearch').value = '';
+      activeRows = [];
+      resetKpis();
+      renderEmpty('Filtro limpiado. Ingresa una nómina o nombre de generalista para consultar.');
+    }
+
+    function uniqueCount(rows, aliases) {
+      const set = new Set();
+      rows.forEach(r => {
+        const v = getValue(r, aliases);
+        if (v !== '') set.add(String(v));
+      });
+      return set.size;
+    }
+
+    function renderDashboard(rows) {
+      const generalista = getValue(rows[0], COLS.generalista, 'Sin nombre');
+      const nomina = normalizeNomina(getValue(rows[0], COLS.nominaGeneralista)) || '-';
+      const clientes = uniqueCount(rows, COLS.key);
+      const impacto = rows.reduce((acc, r) => acc + asNumber(getValue(r, COLS.total)), 0);
+      const personasConSeguro = rows.filter(r => asNumber(getValue(r, COLS.total)) >= 1).length;
+      const penetracionTotal = rows.length ? (personasConSeguro / rows.length) * 100 : 0;
+
+      document.getElementById('kpiNomina').textContent = nomina;
+      document.getElementById('kpiGeneralista').textContent = generalista;
+      document.getElementById('kpiClientes').textContent = formatNumber(clientes);
+      document.getElementById('kpiImpacto').textContent = formatNumber(impacto);
+      document.getElementById('kpiGenNameHint').textContent = `${rows.length} registros filtrados`;
+      document.getElementById('badgeUniverse').textContent = `${formatNumber(rows.length)} personas`;
+      document.getElementById('badgePenetracion').textContent = `${penetracionTotal.toFixed(1)}% con al menos un seguro`;
+
+      renderProfile(rows);
+      drawSegurosChart(rows);
+      drawContratoChart(rows);
+      drawPenetracionChart(rows);
+      drawPersonasChart(rows, personasConSeguro);
+      renderTable(rows);
+    }
+
+    function renderProfile(rows) {
+      const first = rows[0] || {};
+      const profile = [
+        ['Estado', mode(rows, COLS.estado)],
+        ['Región TEC', mode(rows, COLS.region)],
+        ['División', mode(rows, COLS.division)],
+        ['Público', mode(rows, COLS.publico)],
+        ['Tipo contrato dominante', mode(rows, COLS.contrato)],
+        ['Emails detectados', rows.filter(r => getValue(r, COLS.email)).length]
+      ];
+
+      document.getElementById('profileGrid').innerHTML = profile.map(([label, value]) => `
+        <div class="meta-item">
+          <div class="small">${label}</div>
+          <div class="big">${value || '-'}</div>
+        </div>
+      `).join('');
+    }
+
+    function sumBy(rows, specs) {
+      return specs.map(([label, aliases]) => [label, rows.reduce((acc, r) => acc + asNumber(getValue(r, aliases)), 0)]);
+    }
+
+    function countAtLeastOne(rows, aliases) {
+      return rows.filter(r => asNumber(getValue(r, aliases)) >= 1).length;
+    }
+
+    function drawSegurosChart(rows) {
+      const seguros = sumBy(rows, [
+        ['Autos', COLS.autos],
+        ['Casa', COLS.casa],
+        ['Defunción', COLS.defuncion],
+        ['Dental', COLS.dental],
+        ['SGMM', COLS.sgmm],
+        ['SGMm', COLS.sgmm2],
+        ['Vida', COLS.vida]
+      ]);
+
+      const data = google.visualization.arrayToDataTable([
+        ['Seguro', 'Cantidad'],
+        ...seguros
+      ]);
+
+      const options = {
+        legend: { position: 'none' },
+        chartArea: { left: 90, right: 24, top: 10, bottom: 30, width: '75%', height: '75%' },
+        hAxis: { minValue: 0, textStyle: { color: '#475569' } },
+        vAxis: { textStyle: { color: '#334155' } },
+        bars: 'horizontal',
+        height: 320,
+        backgroundColor: 'transparent'
+      };
+
+      new google.charts.Bar(document.getElementById('seguroChart')).draw(data, google.charts.Bar.convertOptions(options));
+    }
+
+    function drawContratoChart(rows) {
+      const map = new Map();
+      rows.forEach(r => {
+        const contrato = getValue(r, COLS.contrato, 'Sin dato');
+        const current = map.get(contrato) || 0;
+        map.set(contrato, current + asNumber(getValue(r, COLS.total)));
+      });
+
+      const arr = Array.from(map.entries());
+      const data = google.visualization.arrayToDataTable([
+        ['Contrato', 'Impacto'],
+        ...arr
+      ]);
+
+      const options = {
+        pieHole: 0.52,
+        chartArea: { left: 20, right: 20, top: 20, bottom: 20, width: '95%', height: '90%' },
+        legend: { position: 'right', textStyle: { color: '#334155', fontSize: 12 } },
+        pieSliceText: 'value',
+        backgroundColor: 'transparent'
+      };
+
+      new google.visualization.PieChart(document.getElementById('contratoChart')).draw(data, options);
+    }
+
+    function drawPenetracionChart(rows) {
+      const universe = rows.length || 1;
+      const stats = [
+        ['Autos', countAtLeastOne(rows, COLS.autos)],
+        ['Casa', countAtLeastOne(rows, COLS.casa)],
+        ['Defunción', countAtLeastOne(rows, COLS.defuncion)],
+        ['Dental', countAtLeastOne(rows, COLS.dental)],
+        ['SGMM', countAtLeastOne(rows, COLS.sgmm)],
+        ['SGMm', countAtLeastOne(rows, COLS.sgmm2)],
+        ['Vida', countAtLeastOne(rows, COLS.vida)]
+      ].map(([name, value]) => [name, Number(((value / universe) * 100).toFixed(1))]);
+
+      const data = google.visualization.arrayToDataTable([
+        ['Producto', '% penetración'],
+        ...stats
+      ]);
+
+      const options = {
+        legend: { position: 'none' },
+        chartArea: { left: 55, right: 18, top: 12, bottom: 45, width: '82%', height: '75%' },
+        vAxis: { minValue: 0, maxValue: 100, format: '#\%' },
+        backgroundColor: 'transparent'
+      };
+
+      new google.visualization.ColumnChart(document.getElementById('penetracionChart')).draw(data, options);
+    }
+
+    function drawPersonasChart(rows, personasConSeguro) {
+      const sinSeguro = Math.max(rows.length - personasConSeguro, 0);
+      const data = google.visualization.arrayToDataTable([
+        ['Estatus', 'Personas'],
+        ['Con al menos un seguro', personasConSeguro],
+        ['Sin seguros', sinSeguro]
+      ]);
+
+      const options = {
+        legend: { position: 'none' },
+        chartArea: { left: 60, right: 20, top: 20, bottom: 35, width: '78%', height: '78%' },
+        backgroundColor: 'transparent'
+      };
+
+      new google.visualization.BarChart(document.getElementById('personasChart')).draw(data, options);
+    }
+
+    function renderTable(rows) {
+      const top = [...rows]
+        .sort((a, b) => asNumber(getValue(b, COLS.total)) - asNumber(getValue(a, COLS.total)))
+        .slice(0, 200);
+
+      const html = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>key_1</th>
+                <th>Persona</th>
+                <th>Contrato</th>
+                <th>Autos</th>
+                <th>Casa</th>
+                <th>Defunción</th>
+                <th>Dental</th>
+                <th>SGMM</th>
+                <th>SGMm</th>
+                <th>Vida</th>
+                <th>Total</th>
+                <th>Estatus</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${top.map(r => {
+                const total = asNumber(getValue(r, COLS.total));
+                return `
+                  <tr>
+                    <td>${escapeHtml(getValue(r, COLS.key))}</td>
+                    <td>${escapeHtml(getValue(r, COLS.persona))}</td>
+                    <td>${escapeHtml(getValue(r, COLS.contrato, '-'))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.autos)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.casa)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.defuncion)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.dental)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.sgmm)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.sgmm2)))}</td>
+                    <td>${formatNumber(asNumber(getValue(r, COLS.vida)))}</td>
+                    <td><span class="pill ${total === 0 ? 'warning' : ''}">${formatNumber(total)}</span></td>
+                    <td>${total >= 1 ? 'Con al menos un seguro' : 'Sin seguros'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      document.getElementById('tableContainer').innerHTML = html;
+    }
+
+    function mode(rows, aliases) {
+      const map = new Map();
+      rows.forEach(r => {
+        const val = getValue(r, aliases, 'Sin dato');
+        map.set(val, (map.get(val) || 0) + 1);
+      });
+      return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+    }
+
+    function formatNumber(n) {
+      return new Intl.NumberFormat('es-MX').format(n || 0);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function resetKpis() {
+      document.getElementById('kpiNomina').textContent = '-';
+      document.getElementById('kpiGeneralista').textContent = '-';
+      document.getElementById('kpiClientes').textContent = '0';
+      document.getElementById('kpiImpacto').textContent = '0';
+      document.getElementById('kpiGenNameHint').textContent = 'Sin selección';
+      document.getElementById('badgeUniverse').textContent = '0 personas';
+      document.getElementById('badgePenetracion').textContent = '0%';
+      document.getElementById('profileGrid').innerHTML = '';
+    }
+
+    function renderEmpty(message) {
+      document.getElementById('profileGrid').innerHTML = `<div class="empty span-12">${message}</div>`;
+      document.getElementById('tableContainer').innerHTML = `<div class="empty">${message}</div>`;
+      ['seguroChart', 'contratoChart', 'penetracionChart', 'personasChart'].forEach(id => {
+        document.getElementById(id).innerHTML = `<div class="empty" style="height:100%;display:flex;align-items:center;justify-content:center;">${message}</div>`;
+      });
+      resetKpis();
+    }
+  </script>
+</body>
+</html>
